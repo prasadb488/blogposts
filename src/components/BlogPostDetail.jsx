@@ -1,7 +1,30 @@
 import React from 'react';
 import './BlogPostDetail.css';
+import CommentList from './CommentList';
+import CommentForm from './CommentForm';
 
-const BlogPostDetail = ({ title, content, author, date }) => {
+const BlogPostDetail = ({ id, title, content, author, date }) => {
+  const [comments, setComments] = React.useState([]);
+
+  React.useEffect(() => {
+    if (id) {
+      const storedComments = localStorage.getItem(`blog-comments-${id}`);
+      if (storedComments) {
+        setComments(JSON.parse(storedComments));
+      }
+    }
+  }, [id]);
+
+  React.useEffect(() => {
+    if (id) {
+      localStorage.setItem(`blog-comments-${id}`, JSON.stringify(comments));
+    }
+  }, [comments, id]);
+
+  const handleAddComment = (newComment) => {
+    setComments([...comments, newComment]);
+  };
+
   if (!title || !content || !author || !date) {
     return <p className="blog-post-not-found">Blog post not found.</p>;
   }
@@ -21,6 +44,9 @@ const BlogPostDetail = ({ title, content, author, date }) => {
         className="post-content"
         dangerouslySetInnerHTML={{ __html: content }}
       />
+
+      <CommentList comments={comments} />
+      <CommentForm onSubmit={handleAddComment} />
     </div>
   );
 };

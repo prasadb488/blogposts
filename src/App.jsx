@@ -3,9 +3,10 @@ import { Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
 import BlogPostList from './components/BlogPostList';
 import BlogPostDetail from './components/BlogPostDetail';
 import CreatePostPage from './pages/CreatePostPage';
-import EditPostPage from './pages/EditPostPage'; // ✅ New import
+import EditPostPage from './pages/EditPostPage';
 import DeleteButton from './components/DeleteButton';
 import ConfirmationDialog from './components/ConfirmationDialog';
+import Layout from './components/Layout';
 
 const LOCAL_STORAGE_KEY = 'my-blog-posts';
 
@@ -13,6 +14,7 @@ const App = () => {
   const [posts, setPosts] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const navigate = useNavigate();
 
@@ -72,10 +74,10 @@ const App = () => {
     const updatedPosts = posts.map((post) =>
       post.id === id
         ? {
-            ...post,
-            ...updatedData,
-            summary: updatedData.content.slice(0, 100) + '...',
-          }
+          ...post,
+          ...updatedData,
+          summary: updatedData.content.slice(0, 100) + '...',
+        }
         : post
     );
     setPosts(updatedPosts);
@@ -93,15 +95,22 @@ const App = () => {
     navigate('/');
   };
 
-  return (
-    <div>
-      <nav style={{ padding: '1rem', background: '#f4f4f4' }}>
-        <Link to="/" style={{ marginRight: '1rem' }}>Home</Link>
-        <Link to="/create">Create Post</Link>
-      </nav>
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+  };
 
+  const filteredPosts = posts.filter((post) => {
+    const lowerQuery = searchQuery.toLowerCase();
+    return (
+      post.title.toLowerCase().includes(lowerQuery) ||
+      post.content.toLowerCase().includes(lowerQuery)
+    );
+  });
+
+  return (
+    <Layout onSearch={handleSearch}>
       <Routes>
-        <Route path="/" element={<BlogPostList posts={posts} />} />
+        <Route path="/" element={<BlogPostList posts={filteredPosts} />} />
         <Route
           path="/posts/:id"
           element={<PostWrapper posts={posts} onDelete={handleDeleteRequest} />}
@@ -118,7 +127,7 @@ const App = () => {
         onClose={() => setDialogOpen(false)}
         onConfirm={confirmDelete}
       />
-    </div>
+    </Layout>
   );
 };
 
@@ -133,6 +142,7 @@ const PostWrapper = ({ posts, onDelete }) => {
   return (
     <div>
       <BlogPostDetail
+        id={post.id}
         title={post.title}
         content={post.content}
         author={post.author}
@@ -140,7 +150,7 @@ const PostWrapper = ({ posts, onDelete }) => {
       />
       <DeleteButton onClick={() => onDelete(post)} />
       <Link to={`/edit/${post.id}`}>
-          <button className="edit-button">Edit</button>
+        <button className="edit-button">Edit</button>
       </Link>
     </div>
   );

@@ -11,7 +11,7 @@ const singlePost = {
 const PostPage = () => {
   return (
     <div>
-      <BlogPostDetail {...singlePost} />
+      <BlogPostDetail id="mock-id" {...singlePost} />
     </div>
   );
 };
